@@ -1,0 +1,623 @@
+Here's the fully translated `panel.html`:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌸 Discord Translation Bot - Sakura Panel</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Sakura falling background -->
+  <div class="sakura-container"></div>
+  
+  <div class="container">
+    <!-- Top header bar -->
+    <div class="header">
+      <div class="header-title">
+        <span class="icon">🌸</span>
+        <h1>Discord Translation Bot</h1>
+        <span class="version">Sakura v3.0</span>
+      </div>
+      <div class="status-badge" id="bot-status">
+        <span class="status-dot"></span>
+        <span class="status-text">Loading...</span>
+      </div>
+    </div>
+    
+    <div class="content">
+      <!-- Login / Guest mode notice -->
+      <div id="auth-section">
+        <div class="readonly-banner" id="readonly-banner" style="display: none;">
+          🔒 Guest Mode - View only
+          <button class="btn-link" onclick="showLoginModal()">Admin Login</button>
+        </div>
+        
+        <div class="admin-info" id="admin-info" style="display: none;">
+          ✅ Admin Mode | 
+          <a href="#" onclick="logout()" class="btn-link">Logout</a>
+        </div>
+      </div>
+
+      <!-- Core info cards -->
+      <div class="card-grid">
+        <div class="info-card">
+          <div class="card-icon">🚀</div>
+          <div class="card-content">
+            <div class="card-label">Uptime</div>
+            <div class="card-value" id="uptime">00:00:00</div>
+          </div>
+        </div>
+        
+        <div class="info-card">
+          <div class="card-icon">📅</div>
+          <div class="card-content">
+            <div class="card-label">Last Active</div>
+            <div class="card-value" id="last-active">Never</div>
+          </div>
+        </div>
+        
+        <div class="info-card">
+          <div class="card-icon">🌐</div>
+          <div class="card-content">
+            <div class="card-label">Command Prefix</div>
+            <div class="card-value" id="cmd-prefix">!</div>
+          </div>
+        </div>
+        
+        <div class="info-card">
+          <div class="card-icon">🗣️</div>
+          <div class="card-content">
+            <div class="card-label">Supported Languages</div>
+            <div class="card-value" id="lang-count">8</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Configuration section -->
+      <div class="section">
+        <div class="section-header">
+          <h2>⚙️ Bot Configuration</h2>
+          <div class="section-actions">
+            <button class="btn-icon" onclick="refreshConfig()" title="Refresh">🔄</button>
+          </div>
+        </div>
+        
+        <form id="config-form" onsubmit="saveConfig(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>
+                <span class="label-icon">🤖</span>
+                Discord Bot Token
+              </label>
+              <div class="input-wrapper">
+                <input type="password" id="discord-token" name="discordToken" 
+                  placeholder="Paste your Bot Token here" readonly>
+                <button type="button" class="btn-toggle-password" onclick="togglePassword('discord-token')">👁️</button>
+              </div>
+              <span class="form-hint">Format: MTIzNDU2.GhJkLm.nOpQrStUvWxYz...</span>
+            </div>
+            
+            <div class="form-group">
+              <label>
+                <span class="label-icon">🔗</span>
+                Translation API URL
+              </label>
+              <input type="text" id="api-url" name="translateApiUrl" 
+                value="https://libretranslate.com" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label>
+                <span class="label-icon">🔑</span>
+                Translation API Key (optional)
+              </label>
+              <div class="input-wrapper">
+                <input type="password" id="api-key" name="translateApiKey" 
+                  placeholder="Leave blank to use free API" readonly>
+                <button type="button" class="btn-toggle-password" onclick="togglePassword('api-key')">👁️</button>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>
+                <span class="label-icon">💬</span>
+                Command Prefix
+              </label>
+              <input type="text" id="prefix" name="commandPrefix" 
+                value="!" maxlength="2" readonly>
+              <span class="form-hint">Recommended: ! / . $</span>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>
+              <span class="label-icon">🌍</span>
+              Supported Language Codes
+            </label>
+            <textarea id="languages" name="supportedLanguages" 
+              rows="2" readonly>zh, en, ja, ko, fr, de, es, ru</textarea>
+            <span class="form-hint">Comma-separated, e.g.: zh, en, ja, ko</span>
+          </div>
+          
+          <div class="form-actions" id="form-actions" style="display: none;">
+            <button type="submit" class="btn btn-primary">
+              <span>💾</span> Save Configuration
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Bot control -->
+      <div class="section" id="bot-control" style="display: none;">
+        <div class="section-header">
+          <h2>🎮 Bot Control</h2>
+        </div>
+        
+        <div class="control-panel">
+          <button class="btn btn-success" onclick="startBot()" id="btn-start">
+            <span>▶️</span> Start Bot
+          </button>
+          <button class="btn btn-danger" onclick="stopBot()" id="btn-stop" disabled>
+            <span>⏹️</span> Stop Bot
+          </button>
+        </div>
+      </div>
+
+      <!-- Security settings -->
+      <div class="section" id="security-section" style="display: none;">
+        <div class="section-header">
+          <h2>🔒 Security Settings</h2>
+        </div>
+        
+        <form id="password-form" onsubmit="changePassword(event)">
+          <div class="form-group">
+            <label>
+              <span class="label-icon">🔐</span>
+              New Admin Password
+            </label>
+            <input type="password" id="new-password" name="newPassword" 
+              placeholder="Enter new password (min 6 characters)" required>
+          </div>
+          <button type="submit" class="btn btn-secondary">
+            <span>🔑</span> Change Password
+          </button>
+        </form>
+      </div>
+
+      <!-- Usage guide -->
+      <div class="section">
+        <div class="section-header">
+          <h2>📖 Usage Guide</h2>
+        </div>
+        
+        <div class="guide-content">
+          <div class="guide-item">
+            <div class="guide-icon">1️⃣</div>
+            <div class="guide-text">
+              <strong>Get Bot Token</strong>
+              <p>Visit <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a> to create an app and get your Token</p>
+            </div>
+          </div>
+          
+          <div class="guide-item">
+            <div class="guide-icon">2️⃣</div>
+            <div class="guide-text">
+              <strong>Configure Bot</strong>
+              <p>Enter your Token in the "Bot Configuration" section above. Optionally configure a custom translation API.</p>
+            </div>
+          </div>
+          
+          <div class="guide-item">
+            <div class="guide-icon">3️⃣</div>
+            <div class="guide-text">
+              <strong>Start Service</strong>
+              <p>After saving the configuration, click "Start Bot" in the "Bot Control" section.</p>
+            </div>
+          </div>
+          
+          <div class="command-examples">
+            <div class="example-title">💡 Command Examples</div>
+            <div class="example-list">
+              <code>!tr zh Hello world</code>
+              <code>!translate en 你好</code>
+              <code>!help</code>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Log panel -->
+      <div class="section">
+        <div class="section-header">
+          <h2>📝 Runtime Logs</h2>
+          <div class="section-actions">
+            <button class="btn-icon" onclick="clearLogs()" title="Clear Logs">🗑️</button>
+          </div>
+        </div>
+        
+        <div class="logs-container" id="logs">
+          <div class="log-entry log-success">
+            <span class="log-time">[00:00:00]</span>
+            <span class="log-msg">🌸 Sakura system ready</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div>🌸 Sakura Panel v3.0 | Powered by Discord.js</div>
+      <div>Made with 💖 by Zero Project</div>
+    </div>
+  </div>
+
+  <!-- Login modal -->
+  <div class="modal" id="login-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🔐 Admin Login</h3>
+        <button class="modal-close" onclick="closeLoginModal()">×</button>
+      </div>
+      <form onsubmit="login(event)">
+        <div class="form-group">
+          <label>Admin Password</label>
+          <input type="password" id="login-password" placeholder="Enter admin password" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Global state
+    let isAdmin = false;
+    let config = {};
+    let startTime = Date.now();
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+      loadConfig();
+      startUptime();
+      createSakuraEffect();
+    });
+
+    // Check login status
+    function checkAuth() {
+      fetch('/api/auth/check')
+        .then(r => r.json())
+        .then(data => {
+          isAdmin = data.isAdmin;
+          updateAuthUI();
+        });
+    }
+
+    // Update auth UI
+    function updateAuthUI() {
+      const readonlyBanner = document.getElementById('readonly-banner');
+      const adminInfo = document.getElementById('admin-info');
+      const formActions = document.getElementById('form-actions');
+      const botControl = document.getElementById('bot-control');
+      const securitySection = document.getElementById('security-section');
+      
+      if (isAdmin) {
+        readonlyBanner.style.display = 'none';
+        adminInfo.style.display = 'block';
+        formActions.style.display = 'flex';
+        botControl.style.display = 'block';
+        securitySection.style.display = 'block';
+        
+        // Remove readonly (exclude login modal)
+        document.querySelectorAll('#config-form input, #config-form textarea').forEach(el => {
+          el.removeAttribute('readonly');
+        });
+      } else {
+        readonlyBanner.style.display = 'flex';
+        adminInfo.style.display = 'none';
+        formActions.style.display = 'none';
+        botControl.style.display = 'none';
+        securitySection.style.display = 'none';
+        
+        // Add readonly (config form only)
+        document.querySelectorAll('#config-form input, #config-form textarea').forEach(el => {
+          el.setAttribute('readonly', 'readonly');
+        });
+      }
+    }
+
+    // Load config
+    function loadConfig() {
+      fetch('/api/config')
+        .then(r => r.json())
+        .then(data => {
+          config = data;
+          updateConfigUI();
+          updateBotStatus();
+        })
+        .catch(err => {
+          addLog('Failed to load config: ' + err.message, 'error');
+        });
+    }
+
+    // Update config UI
+    function updateConfigUI() {
+      document.getElementById('discord-token').value = config.discordToken || '';
+      document.getElementById('api-url').value = config.translateApiUrl || 'https://libretranslate.com';
+      document.getElementById('api-key').value = config.translateApiKey || '';
+      document.getElementById('prefix').value = config.commandPrefix || '!';
+      document.getElementById('languages').value = config.supportedLanguages ? config.supportedLanguages.join(', ') : 'zh, en, ja, ko, fr, de, es, ru';
+      
+      document.getElementById('cmd-prefix').textContent = config.commandPrefix || '!';
+      document.getElementById('lang-count').textContent = config.supportedLanguages ? config.supportedLanguages.length : 8;
+      document.getElementById('last-active').textContent = config.lastSuccessTime || 'Never';
+    }
+
+    // Update bot status
+    function updateBotStatus() {
+      const statusBadge = document.getElementById('bot-status');
+      const btnStart = document.getElementById('btn-start');
+      const btnStop = document.getElementById('btn-stop');
+      
+      if (config.botStatus === 'online') {
+        statusBadge.className = 'status-badge online';
+        statusBadge.innerHTML = '<span class="status-dot"></span><span class="status-text">● Online</span>';
+        if (btnStart) btnStart.disabled = true;
+        if (btnStop) btnStop.disabled = false;
+      } else {
+        statusBadge.className = 'status-badge offline';
+        statusBadge.innerHTML = '<span class="status-dot"></span><span class="status-text">● Offline</span>';
+        if (btnStart) btnStart.disabled = false;
+        if (btnStop) btnStop.disabled = true;
+      }
+    }
+
+    // Save config
+    function saveConfig(event) {
+      event.preventDefault();
+      
+      if (!isAdmin) {
+        alert('Admin permission required!');
+        return;
+      }
+      
+      const formData = new FormData(event.target);
+      const data = {
+        discordToken: formData.get('discordToken'),
+        translateApiUrl: formData.get('translateApiUrl'),
+        translateApiKey: formData.get('translateApiKey'),
+        commandPrefix: formData.get('commandPrefix'),
+        supportedLanguages: formData.get('supportedLanguages')
+      };
+      
+      fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(r => r.json())
+      .then(result => {
+        if (result.success) {
+          addLog('Configuration saved successfully', 'success');
+          loadConfig();
+        } else {
+          addLog('Failed to save configuration', 'error');
+        }
+      })
+      .catch(err => {
+        addLog('Save failed: ' + err.message, 'error');
+      });
+    }
+
+    // Start bot
+    function startBot() {
+      if (!isAdmin) return;
+      
+      addLog('Starting bot...', 'step');
+      
+      fetch('/api/bot/start', { method: 'POST' })
+        .then(r => r.json())
+        .then(result => {
+          if (result.success) {
+            addLog('Bot started successfully', 'success');
+            setTimeout(loadConfig, 1000);
+          } else {
+            addLog('Start failed: ' + result.message, 'error');
+          }
+        });
+    }
+
+    // Stop bot
+    function stopBot() {
+      if (!isAdmin) return;
+      
+      addLog('Stopping bot...', 'step');
+      
+      fetch('/api/bot/stop', { method: 'POST' })
+        .then(r => r.json())
+        .then(result => {
+          if (result.success) {
+            addLog('Bot stopped', 'warn');
+            setTimeout(loadConfig, 1000);
+          } else {
+            addLog('Stop failed', 'error');
+          }
+        });
+    }
+
+    // Change password
+    function changePassword(event) {
+      event.preventDefault();
+      
+      if (!isAdmin) return;
+      
+      const newPassword = document.getElementById('new-password').value;
+      
+      if (newPassword.length < 6) {
+        alert('Password must be at least 6 characters!');
+        return;
+      }
+      
+      fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPassword })
+      })
+      .then(r => r.json())
+      .then(result => {
+        if (result.success) {
+          alert('Password changed successfully. Please log in again.');
+          logout();
+        } else {
+          alert('Failed to change password');
+        }
+      });
+    }
+
+    // Login
+    function login(event) {
+      event.preventDefault();
+      
+      const password = document.getElementById('login-password').value;
+      
+      fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      })
+      .then(r => r.json())
+      .then(result => {
+        if (result.success) {
+          isAdmin = true;
+          updateAuthUI();
+          closeLoginModal();
+          addLog('Admin login successful', 'success');
+          loadConfig();
+        } else {
+          alert('Incorrect password!');
+        }
+      });
+    }
+
+    // Logout
+    function logout() {
+      fetch('/api/auth/logout', { method: 'POST' })
+        .then(() => {
+          isAdmin = false;
+          updateAuthUI();
+          addLog('Logged out of admin mode', 'warn');
+        });
+    }
+
+    // Refresh config
+    function refreshConfig() {
+      addLog('Refreshing config...', 'step');
+      loadConfig();
+    }
+
+    // Clear logs
+    function clearLogs() {
+      const logsContainer = document.getElementById('logs');
+      logsContainer.innerHTML = '<div class="log-entry log-success"><span class="log-time">[00:00:00]</span><span class="log-msg">🌸 Logs cleared</span></div>';
+    }
+
+    // Add log entry
+    function addLog(message, type = 'info') {
+      const logsContainer = document.getElementById('logs');
+      const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
+      
+      const logEntry = document.createElement('div');
+      logEntry.className = `log-entry log-${type}`;
+      
+      let icon = '';
+      if (type === 'success') icon = '🌸 ';
+      else if (type === 'error') icon = '❌ ';
+      else if (type === 'warn') icon = '⚠️ ';
+      else if (type === 'step') icon = '👉 ';
+      
+      logEntry.innerHTML = `
+        <span class="log-time">[${time}]</span>
+        <span class="log-msg">${icon}${message}</span>
+      `;
+      
+      logsContainer.insertBefore(logEntry, logsContainer.firstChild);
+      
+      // Limit log entries
+      while (logsContainer.children.length > 50) {
+        logsContainer.removeChild(logsContainer.lastChild);
+      }
+    }
+
+    // Uptime counter
+    function startUptime() {
+      setInterval(() => {
+        const diff = Date.now() - startTime;
+        const hours = Math.floor(diff / 3600000);
+        const mins = Math.floor((diff % 3600000) / 60000);
+        const secs = Math.floor((diff % 60000) / 1000);
+        
+        const uptimeEl = document.getElementById('uptime');
+        if (uptimeEl) {
+          uptimeEl.textContent = `${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+        }
+      }, 1000);
+    }
+
+    function pad(n) {
+      return n.toString().padStart(2, '0');
+    }
+
+    // Toggle password visibility
+    function togglePassword(inputId) {
+      const input = document.getElementById(inputId);
+      const btn = input.nextElementSibling;
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    }
+
+    // Modal controls
+    function showLoginModal() {
+      document.getElementById('login-modal').classList.add('active');
+    }
+
+    function closeLoginModal() {
+      document.getElementById('login-modal').classList.remove('active');
+      document.getElementById('login-password').value = '';
+    }
+
+    // Sakura falling effect
+    function createSakuraEffect() {
+      const container = document.querySelector('.sakura-container');
+      
+      for (let i = 0; i < 10; i++) {
+        const sakura = document.createElement('div');
+        sakura.textContent = '🌸';
+        sakura.style.position = 'absolute';
+        sakura.style.fontSize = Math.random() * 10 + 15 + 'px';
+        sakura.style.left = Math.random() * 100 + '%';
+        sakura.style.opacity = Math.random() * 0.5 + 0.3;
+        sakura.style.animation = `sakura-fall ${Math.random() * 10 + 10}s infinite linear`;
+        sakura.style.animationDelay = Math.random() * 5 + 's';
+        container.appendChild(sakura);
+      }
+    }
+
+    // Close modal on outside click
+    document.addEventListener('click', (e) => {
+      const modal = document.getElementById('login-modal');
+      if (e.target === modal) {
+        closeLoginModal();
+      }
+    });
+  </script>
+</body>
+</html>
+```
