@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
 import os
-import re
-import json
 import base64
 import random
 import string
 import asyncio
+import logging
 import threading
 from pathlib import Path
 
@@ -16,24 +15,20 @@ from discord import Intents, Client
 from flask import Flask, request, jsonify, send_from_directory, session
 from flask_session import Session
 
-# ========== 端口配置 ==========
+
 def get_port():
     for env_var in ['SERVER_PORT', 'PORT', 'APP_PORT', 'ALLOCATED_PORT']:
         val = os.environ.get(env_var)
         if val:
             try:
-                port = int(val)
-                print(f'📍 Using {env_var}: {port}')
-                return port
+                return int(val)
             except ValueError:
                 pass
-    print('📍 Using default port: 443')
     print('💡 Tip: Set the environment variable PORT=your_port in the "Startup Parameters" of the EkNodes panel')
     return 443
 
 PORT = get_port()
 
-# ========== 配置文件 ==========
 CONFIG_FILE = './.npm/sub.txt'
 
 def generate_random_password(length=16):
@@ -47,7 +42,6 @@ def generate_example_token():
     part3 = ''.join(random.choices(chars, k=27))
     return f'{part1}.{part2}.{part3}'
 
-# 默认配置
 config = {
     'adminPassword':      generate_random_password(16),
     'discordToken':       generate_example_token(),
@@ -85,7 +79,6 @@ def save_config():
     try:
         dir_path = os.path.dirname(CONFIG_FILE)
         Path(dir_path).mkdir(parents=True, exist_ok=True)
-
         lines = [
             f"adminPassword={config['adminPassword']}",
             f"discordToken={config['discordToken']}",
@@ -103,7 +96,6 @@ def save_config():
 
 load_config()
 
-# ========== Discord Bot ==========
 discord_client = None
 discord_loop   = None
 
@@ -223,7 +215,6 @@ def stop_bot():
         save_config()
         print('🛑 Bot stopped')
 
-# ========== 获取公网 IP ==========
 async def get_public_ip():
     async with httpx.AsyncClient(timeout=3) as client:
         for url in ['https://api.ip.sb/ip', 'https://api.ipify.org']:
@@ -236,7 +227,9 @@ async def get_public_ip():
                 pass
     return None
 
-# ========== Flask Web 服务器 ==========
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
+logging.getLogger('flask.app').setLevel(logging.ERROR)
+
 app = Flask(__name__)
 app.secret_key = 'discord-bot-secret-key'
 app.config['SESSION_TYPE']               = 'filesystem'
@@ -309,13 +302,11 @@ def api_stop_bot():
     stop_bot()
     return jsonify({'success': True})
 
-# ========== 启动入口 ==========
 def print_startup_banner(public_ip):
     if public_ip:
         print(f'✅ Public IP detected: {public_ip}')
     else:
         print('⚠️  Unable to retrieve public IP, using localhost')
-
     print('')
     print('╔════════════════════════════════════════════════════════╗')
     print('║        🤖 Discord Translation Bot Panel Started        ║')
@@ -343,7 +334,6 @@ async def startup():
         print('🚀 Token detected, starting bot...')
         start_bot()
 
-    # Flask 在独立线程中运行
     flask_thread = threading.Thread(
         target=lambda: app.run(host='0.0.0.0', port=PORT, use_reloader=False),
         daemon=True
@@ -352,5 +342,4 @@ async def startup():
 
 if __name__ == '__main__':
     asyncio.run(startup())
-    # 保持主线程存活
     threading.Event().wait()
